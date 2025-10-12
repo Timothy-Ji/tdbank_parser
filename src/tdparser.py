@@ -61,8 +61,6 @@ def is_footer_line(line):
 
 def parse_td_pdf(file_path):
     transactions = []
-
-    print(f"Parsing {file_path}")
     with pdfplumber.open(file_path) as pdf:
         # capture account number from first page
         first_page = pdf.pages[0]
@@ -76,7 +74,6 @@ def parse_td_pdf(file_path):
             raise ValueError("Account number not found in the first page")
         # Remove any non-digit characters from account number
         account_number = ''.join(filter(str.isdigit, account_number))
-        print(f"[✓] Account number: {account_number}")
 
         # ignore data before DAILYACCOUNTACTIVITY
         # end parsing after DAILYBALANCESUMMARY (no more transactions after this)
@@ -214,9 +211,10 @@ def verify_balances(df, file_path):
 
     calculated_ending_balance = beginning_balance + net_change
 
-    if abs(calculated_ending_balance - ending_balance) < 0.01:
-        print(f"[✓] Balance verification successful: Calculated ending balance matches reported ending balance. Expected: {ending_balance}, Calculated: {calculated_ending_balance:.2f}")
-    else:
-        print(f"[✗] Balance verification failed: Calculated ending balance does not match reported ending balance. Expected: {ending_balance}, Calculated: {calculated_ending_balance:.2f}")
-
-    return abs(calculated_ending_balance - ending_balance) < 0.01
+    return abs(calculated_ending_balance - ending_balance) < 0.01, {
+        "Beginning Balance": beginning_balance,
+        "Ending Balance": ending_balance,
+        "Calculated Ending Balance": calculated_ending_balance,
+        "Total Credits": total_credits,
+        "Total Debits": total_debits
+    }
